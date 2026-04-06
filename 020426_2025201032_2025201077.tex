@@ -1,0 +1,237 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{fancyvrb}
+\usepackage{algorithm}
+\usepackage{wrapfig}
+\usepackage[noend]{algpseudocode}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{theorems, breakable}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+
+\parindent0in
+\pagestyle{plain}
+\thispagestyle{plain}
+\graphicspath{{./}}
+
+%% UPDATE MACRO DEFINITIONS %%
+\newcommand{\myname}{Scribed By: Anupam Dwivedi (2025201032)}
+\newcommand{\mynami}{Name 2 (Roll No. 2)}
+
+\newcommand{\assignment}{Lecture \#Num}
+\newcommand{\duedate}{$2^{nd}$ Apr 2026}
+\newtheorem*{thmtype}{Outline}
+\newcommand{\statement}{
+This lecture covers the foundational theory of constrained optimization. We study feasible and descent directions, characterize local minima via the interaction of these direction sets, introduce active constraints, and build toward a matrix-form necessary condition. We conclude with Farkas' Lemma and its corollary, which provides the algebraic machinery underlying the KKT conditions.
+}
+
+\begin{document}
+
+\textbf{IIIT Hyderabad}\hfill\textbf{\myname}\\[0.01in]
+\textbf{-}\hfill\textbf{\mynami}\\[0.01in]
+\textbf{Optimization Methods (CS1.404)}\hfill\textbf{\assignment}\\[0.01in]
+\textbf{Instructor: Dr.\ Naresh Manwani}\hfill\textbf{\duedate}\\
+\smallskip\hrule\bigskip
+
+\begin{thmtype}
+\statement
+\end{thmtype}
+
+% =====================================================================
+\section{Feasible and Descent Directions in Constrained Optimization}
+% =====================================================================
+
+We consider the general constrained optimization problem:
+\begin{equation}
+  \min_{x \in \mathbb{R}^n} \; f(x) \quad \text{subject to} \quad g_i(x) \leq 0, \quad i = 1, \ldots, m,
+  \label{eq:prob}
+\end{equation}
+where $f, g_i : \mathbb{R}^n \to \mathbb{R}$ are continuously differentiable. The \emph{feasible set} is
+\[
+  \mathcal{X} = \{x \in \mathbb{R}^n : g_i(x) \leq 0, \; i = 1, \ldots, m\}.
+\]
+
+\begin{definition}[Feasible Direction]
+  A nonzero vector $d \in \mathbb{R}^n$ is called a \textbf{feasible direction} at a point $x \in \mathcal{X}$ if there exists $\bar{\alpha} > 0$ such that
+  \[
+    x + \alpha d \in \mathcal{X} \quad \text{for all } \alpha \in (0, \bar{\alpha}).
+  \]
+  Intuitively, $d$ points \emph{into} the feasible set from $x$; moving a small step along $d$ keeps us feasible.
+\end{definition}
+
+\begin{definition}[Descent Direction]
+  A nonzero vector $d \in \mathbb{R}^n$ is called a \textbf{descent direction} for $f$ at $x$ if there exists $\bar{\alpha} > 0$ such that
+  \[
+    f(x + \alpha d) < f(x) \quad \text{for all } \alpha \in (0, \bar{\alpha}).
+  \]
+  That is, moving along $d$ from $x$ strictly decreases the objective.
+\end{definition}
+
+\textbf{Analytic characterisation of descent directions.} When $f$ is differentiable, by a first-order Taylor expansion,
+\[
+  f(x + \alpha d) = f(x) + \alpha \nabla f(x)^\top d + o(\alpha).
+\]
+For small $\alpha > 0$ the sign of $f(x+\alpha d) - f(x)$ is determined by $\nabla f(x)^\top d$. Hence:
+\[
+  d \text{ is a descent direction at } x \iff \nabla f(x)^\top d < 0.
+\]
+
+\begin{remark}
+  We define the sets
+  \begin{align*}
+    \mathcal{F}(x) &= \{d \neq 0 : d \text{ is a feasible direction at } x\}, \\
+    \mathcal{D}(x) &= \{d \neq 0 : \nabla f(x)^\top d < 0\}.
+  \end{align*}
+  A point $x \in \mathcal{X}$ can be improved (moved to a strictly feasible and strictly better point) if and only if $\mathcal{D}(x) \cap \mathcal{F}(x) \neq \emptyset$.
+\end{remark}
+
+% =====================================================================
+\section{Characterization of Local Minima in Constrained Optimization}
+% =====================================================================
+
+\begin{definition}[Local Minimum]
+  A point $x^* \in \mathcal{X}$ is a \textbf{local minimum} of \eqref{eq:prob} if there exists $\delta > 0$ such that
+  \[
+    f(x^*) \leq f(x) \quad \text{for all } x \in \mathcal{X} \text{ with } \|x - x^*\| < \delta.
+  \]
+\end{definition}
+
+\begin{theorem}[Necessary Condition for Local Minimum — Direction Form]
+  \label{thm:local_min_dir}
+  If $x^*$ is a local minimum of \eqref{eq:prob} and $f$ is continuously differentiable, then there is \textbf{no} direction $d$ that is simultaneously a feasible direction and a descent direction at $x^*$. Equivalently,
+  \[
+    \mathcal{D}(x^*) \cap \mathcal{F}(x^*) = \emptyset.
+  \]
+\end{theorem}
+
+\begin{proof}
+  Suppose for contradiction that some $d$ satisfies $\nabla f(x^*)^\top d < 0$ and $x^* + \alpha d \in \mathcal{X}$ for all small $\alpha > 0$. Then
+  \[
+    f(x^* + \alpha d) = f(x^*) + \alpha \underbrace{\nabla f(x^*)^\top d}_{<\;0} + o(\alpha) < f(x^*)
+  \]
+  for all sufficiently small $\alpha > 0$. This contradicts $x^*$ being a local minimum, since $x^* + \alpha d$ is feasible and has a strictly smaller objective value. \qed
+\end{proof}
+
+\textbf{Geometric intuition.} At a local minimum, the gradient $\nabla f(x^*)$ must form an obtuse (or right) angle with every feasible direction — there is no direction you can move along that simultaneously decreases $f$ and remains feasible.
+
+% =====================================================================
+\section{Active Constraints and the Descent-Feasibility Sets}
+% =====================================================================
+
+\subsection{Active Constraints}
+
+\begin{definition}[Active Constraint]
+  The $i$-th constraint $g_i(x) \leq 0$ is said to be \textbf{active} (or \emph{binding}) at $x \in \mathcal{X}$ if $g_i(x) = 0$. The \textbf{active set} at $x$ is
+  \[
+    \mathcal{A}(x) = \{i \in \{1, \ldots, m\} : g_i(x) = 0\}.
+  \]
+  Constraints with $g_i(x) < 0$ are called \textbf{inactive} (or \emph{slack}) at $x$.
+\end{definition}
+
+\textbf{Why do inactive constraints not matter locally?}
+If $g_i(x) < 0$, then by continuity of $g_i$, we have $g_i(x + \alpha d) < 0$ for all sufficiently small $\alpha$ and any direction $d$. So inactive constraints impose no local restriction on feasible directions.
+
+\subsection{The Linearized Feasible Direction Set}
+
+To work analytically, we approximate feasible directions using first-order information of the active constraints.
+
+\begin{definition}[Linearized Feasible Cone]
+  \label{def:lin_feasible}
+  The \textbf{linearized feasible cone} at $x \in \mathcal{X}$ is
+  \[
+    \widetilde{\mathcal{F}}(x) = \{d \in \mathbb{R}^n : \nabla g_i(x)^\top d \leq 0 \;\; \forall\, i \in \mathcal{A}(x)\}.
+  \]
+  This is the set of directions that (to first order) do not violate any active constraint.
+\end{definition}
+
+\begin{definition}[Negative Directional Derivative Set]
+  The set of descent directions for the objective is
+  \[
+    \mathcal{D}(x) = \{d \in \mathbb{R}^n \setminus \{0\} : \nabla f(x)^\top d < 0\}.
+  \]
+  This is the open half-space on the opposite side of the hyperplane $\{\nabla f(x)^\top d = 0\}$ from $\nabla f(x)$.
+\end{definition}
+
+% =====================================================================
+\section{Relation Between \texorpdfstring{$\mathcal{F}(x)$}{F(x)} and \texorpdfstring{$\widetilde{\mathcal{F}}(x)$}{Ftilde(x)} — With Proof}
+% =====================================================================
+
+
+
+% =====================================================================
+\section{Matrix Representation of the Local Minimum Characterization}
+% =====================================================================
+
+Let $x^* \in \mathcal{X}$ and let the active constraint index set be $\mathcal{A}(x^*) = \{i_1, i_2, \ldots, i_k\}$ for some $k \leq m$. Define the \textbf{active constraint gradient matrix}:
+
+\[
+  G =
+  \begin{bmatrix}
+    \nabla g_{i_1}(x^*)^\top \\
+    \nabla g_{i_2}(x^*)^\top \\
+    \vdots \\
+    \nabla g_{i_k}(x^*)^\top
+  \end{bmatrix} \in \mathbb{R}^{k \times n}.
+\]
+
+The linearized feasible cone and descent set become:
+\begin{align*}
+  \widetilde{\mathcal{F}}(x^*) &= \{d \in \mathbb{R}^n : Gd \leq 0\}, \\
+  \mathcal{D}(x^*)             &= \{d \in \mathbb{R}^n : \nabla f(x^*)^\top d < 0\}.
+\end{align*}
+
+\textbf{Necessary condition in matrix form.} The condition $\mathcal{D}(x^*) \cap \widetilde{\mathcal{F}}(x^*) = \emptyset$ states:
+
+\[
+  \boxed{\text{There is no } d \in \mathbb{R}^n \text{ such that } \nabla f(x^*)^\top d < 0 \text{ and } Gd \leq 0.}
+\]
+
+By Farkas' Lemma (Theorem~\ref{thm:farkas_opt}), this is equivalent to the existence of a vector $\lambda \in \mathbb{R}^k$, $\lambda \geq 0$, such that:
+\[
+  \nabla f(x^*) + G^\top \lambda = 0 \quad \Longleftrightarrow \quad \nabla f(x^*) = -\sum_{j=1}^{k} \lambda_{i_j} \nabla g_{i_j}(x^*).
+\]
+
+Extending to all constraints with $\lambda_i = 0$ for $i \notin \mathcal{A}(x^*)$, we get the \textbf{KKT stationarity condition}:
+\[
+  \nabla f(x^*) + \sum_{i=1}^{m} \lambda_i \nabla g_i(x^*) = 0, \qquad \lambda_i \geq 0, \quad \lambda_i g_i(x^*) = 0 \;\; \forall\, i.
+\]
+
+The last condition $\lambda_i g_i(x^*) = 0$ (complementary slackness) follows because $\lambda_i = 0$ for all inactive constraints (by construction) and $g_i(x^*) = 0$ for all active ones.
+
+\textbf{Summary in compact matrix form.}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60!black, title=Local Minimum Characterization (Matrix Form)]
+$x^*$ is a local minimum of $\min f(x)$ s.t.\ $g_i(x) \leq 0$ only if there exist $\lambda \in \mathbb{R}^m$, $\lambda \geq 0$, such that:
+\begin{align*}
+  \nabla f(x^*) + G^\top \lambda_{\mathcal{A}} &= 0 \quad \text{(Stationarity)}, \\
+  G x^* &= 0 \quad \text{(Active constraint at } x^*\text{)}, \\
+  \lambda_{\mathcal{A}} &\geq 0 \quad \text{(Non-negativity of multipliers)},
+\end{align*}
+where $G \in \mathbb{R}^{|\mathcal{A}(x^*)| \times n}$ is the active constraint gradient matrix and $\lambda_{\mathcal{A}}$ are the associated multipliers.
+\end{tcolorbox}
+
+% =====================================================================
+\section{Farkas' Lemma and Its Corollary}
+\label{sec:farkas}
+% =====================================================================
+
+\bigskip
+
+\begin{thebibliography}{9}
+\end{thebibliography}
+
+\end{document}
