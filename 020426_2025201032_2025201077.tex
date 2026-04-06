@@ -6,11 +6,14 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{fancyvrb}
-\usepackage{algorithm}
+% \usepackage{algorithm}
 \usepackage{wrapfig}
-\usepackage[noend]{algpseudocode}
+% \usepackage[noend]{algpseudocode}
 \usepackage{xcolor}
 \usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{hyperref}
 \tcbuselibrary{theorems, breakable}
 
 \theoremstyle{definition}
@@ -170,7 +173,222 @@ To work analytically, we approximate feasible directions using first-order infor
 \section{Relation Between \texorpdfstring{$\mathcal{F}(x)$}{F(x)} and \texorpdfstring{$\widetilde{\mathcal{F}}(x)$}{Ftilde(x)} — With Proof}
 % =====================================================================
 
+In this section, we establish the relationship between the actual feasible directions $\mathcal{F}(x)$ and the linearized feasible directions. Note that while Definition~\ref{def:lin_feasible} defines the closed linearized cone $\widetilde{\mathcal{F}}(x)$ (using $\leq 0$), the following theorem specifically examines the set of directions strictly pointing into the interior of the constraints, which we denote as the \emph{strict} linearized feasible cone:
+\[
+  \widetilde{\mathcal{F}}_{<}(x) = \{d \in \mathbb{R}^n : \nabla g_i(x)^\top d < 0 \;\; \forall\, i \in \mathcal{A}(x)\}.
+\]
 
+\begin{theorem}
+  At any point $x \in \mathcal{X}$, every strictly linearized feasible direction is a feasible direction. That is, 
+  \[
+    \widetilde{\mathcal{F}}_{<}(x) \subseteq \mathcal{F}(x).
+  \]
+\end{theorem}
+
+\begin{proof}
+  Suppose $\widetilde{\mathcal{F}}_{<}(x) \neq \emptyset$ and let $d \in \widetilde{\mathcal{F}}_{<}(x)$. By definition, for all active constraints $i \in \mathcal{A}(x)$, we have $g_i(x) = 0$ and the directional derivative $\nabla g_i(x)^\top d < 0$.
+  
+  By the definition of the directional derivative, there exists a strictly positive scalar $\delta_i > 0$ such that moving along $d$ locally decreases the value of $g_i$:
+  \[
+    g_i(x + \alpha d) < g_i(x) = 0 \quad \text{for all } \alpha \in (0, \delta_i).
+  \]
+  Let $\delta = \min_{i \in \mathcal{A}(x)} \delta_i$. Because $\mathcal{A}(x)$ is a finite set of indices, $\delta > 0$. Thus, for all $\alpha \in (0, \delta)$ and all active constraints $i \in \mathcal{A}(x)$, we have $g_i(x + \alpha d) < 0$.
+  
+  Now, consider the inactive constraints. Let $\mathcal{I}(x) = \{1, 2, \dots, m\} \setminus \mathcal{A}(x)$ denote the set of inactive constraints at $x$. For all $j \in \mathcal{I}(x)$, we have by definition $g_j(x) < 0$. Since $g_j$ is continuous, the function value must remain strictly negative in a small neighborhood around $x$. That is, there exists some $\gamma > 0$ such that:
+  \[
+    g_j(x + \alpha d) \leq 0 \quad \text{for all } \alpha \in (0, \gamma) \text{ and for all } j \in \mathcal{I}(x).
+  \]
+  
+  Finally, we reconcile the step sizes by defining $\beta = \min(\delta, \gamma)$. For any step size $\alpha \in(0, \beta)$, we simultaneously satisfy:
+  \begin{align*}
+    g_i(x + \alpha d) &< 0 \quad \forall\, i \in \mathcal{A}(x), \\
+    g_j(x + \alpha d) &\leq 0 \quad \forall\, j \in \mathcal{I}(x).
+  \end{align*}
+  Therefore, $g_k(x + \alpha d) \leq 0$ for all $k \in \{1, 2, \dots, m\}$. This implies that $(x + \alpha d) \in \mathcal{X}$ for all $\alpha \in (0, \beta)$. By the standard definition of a feasible direction, this means $d \in \mathcal{F}(x)$. This concludes the proof that $\widetilde{\mathcal{F}}_{<}(x) \subseteq \mathcal{F}(x)$.
+\end{proof}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[scale=1.5]
+        % Clip region to keep diagram localized
+        \clip (-2.5,-2.5) rectangle (3, 2.5);
+        
+        % The feasible region g(x) <= 0 (Circle centered at (2,0) with radius 2)
+        \fill[blue!5] (2,0) circle (2);
+        \draw[thick, blue!80!black] (0,0) arc (180:90:2) node[pos=0.5, above left] {$g_1(x)=0$};
+        \draw[thick, blue!80!black] (0,0) arc (180:270:2);
+        \node[blue!80!black] at (1.5, 0) {Feasible Region $\mathcal{X}$};
+        
+        % Point x (origin)
+        \filldraw[black] (0,0) circle (1.5pt) node[anchor=north east] {$x$};
+        
+        % Gradient vector (Points outward, opposite to circle center)
+        \draw[->, thick, red] (0,0) -- (-1.5, 0) node[above] {$\nabla g_1(x)$};
+        
+        % Tangent line (linearized constraint boundary)
+        \draw[dashed, thick, gray] (0,-2.5) -- (0,2.5);
+        \node[gray] at (0.2, 1.8) [anchor=west] {Linearized strictly feasible: $\nabla g_1(x)^\top d < 0$};
+        
+        % A direction d pointing inwards
+        \draw[->, thick, green!60!black] (0,0) -- (1, -0.6) node[anchor=south west] {$d \in \widetilde{\mathcal{F}}_{<}(x)$};
+        
+    \end{tikzpicture}
+    \caption{At point $x$, the gradient $\nabla g_1(x)$ points outwards (the direction of maximum objective increase). The condition $\nabla g_1(x)^\top d < 0$ defines the strict linearized feasible cone (the entire open half-space to the right of the dashed tangent line). As illustrated, any strictly linearized direction $d$ inevitably falls inside the actual curved feasible set $\mathcal{X}$ after taking a sufficiently small step $\alpha$.}
+    \label{fig:feasible_cone}
+\end{figure}
+
+\begin{remark}
+  A crucial consequence of $\widetilde{\mathcal{F}}_{<}(x) \subseteq \mathcal{F}(x)$ relates back to the optimality condition. If a point $x^*$ is a local minimum, Theorem~\ref{thm:local_min_dir} states $\mathcal{D}(x^*) \cap \mathcal{F}(x^*) = \emptyset$. Since the strict linearized cone is a subset of the actual feasible cone, this naturally implies:
+  \[
+    \widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset.
+  \]
+  This forms the foundation for algebraically identifying local minima by inspecting gradient arrays.
+\end{remark}
+
+% =====================================================================
+\section{Necessity versus Sufficiency of the Characterization}
+% =====================================================================
+
+The condition $\widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset$ derived previously is a \textbf{necessary} condition for local optimality, but it is \textbf{not sufficient}. This means that finding a point $x^*$ that satisfies this condition does not guarantee that $x^*$ is actually a local minimum. To illustrate this and highlight the reliance on the functional form of the constraints, we consider two examples.
+
+\begin{example}[A Point Satisfying the Necessary Condition that is NOT a Local Minimum]
+  Consider the optimization problem:
+  \begin{align*}
+    \min_{x \in \mathbb{R}^2} \quad & x_1^2 + x_2^2 \\
+    \text{subject to} \quad & h_1(x) = (x_1 + x_2 - 1)^3 \leq 0, \\
+    & x_1 \geq 0, \quad x_2 \geq 0.
+  \end{align*}
+  Geometrically, the feasible region is the solid triangle defined by $x_1+x_2 \leq 1$ in the first quadrant. The objective represents the squared distance from the origin. Clearly, the true global minimum is at the origin $(0,0)$.
+  
+  Consider any point $x_A = (a,b)$ on the boundary line segment where $a+b=1$ (with $a > 0, b > 0$). At this point, the active constraint is $h_1(x)$. Let us compute the gradient of $h_1$ at $x_A$:
+  \[
+    \nabla h_1(x) = \begin{bmatrix} 3(x_1 + x_2 - 1)^2 \\ 3(x_1 + x_2 - 1)^2 \end{bmatrix} \implies \nabla h_1(x_A) = \begin{bmatrix} 0 \\ 0 \end{bmatrix}.
+  \]
+  The strictly linearized feasible cone at $x_A$ is defined by:
+  \[
+    \widetilde{\mathcal{F}}_{<}(x_A) = \{ d \in \mathbb{R}^2 : \nabla h_1(x_A)^\top d < 0 \} = \{ d \in \mathbb{R}^2 : \mathbf{0}^\top d < 0 \} = \emptyset.
+  \]
+  Since $\widetilde{\mathcal{F}}_{<}(x_A)$ is empty, its intersection with the descent cone $\mathcal{D}(x_A)$ is trivially empty:
+  \[
+    \widetilde{\mathcal{F}}_{<}(x_A) \cap \mathcal{D}(x_A) = \emptyset.
+  \]
+  Thus, $x_A$ perfectly satisfies the necessary condition for a local minimum. Yet, we know $x_A$ is emphatically \emph{not} a local minimum (from $x_A$, we can move straight down inside the triangle to decrease the objective). The failure here is that $\nabla h_1(x_A) = 0$ provides no local first-order geometric information about the boundary.
+\end{example}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[scale=2.5]
+        % Axes
+        \draw[->] (-0.2,0) -- (1.5,0) node[right] {$x_1$};
+        \draw[->] (0,-0.2) -- (0,1.5) node[above] {$x_2$};
+        
+        % Feasible region
+        \fill[blue!10] (0,0) -- (1,0) -- (0,1) -- cycle;
+        \draw[thick, blue] (1,0) -- (0,1) node[pos=0.6, above right, align=center] {Boundary\\$x_1+x_2 = 1$};
+        \draw[thick, blue] (0,0) -- (1,0);
+        \draw[thick, blue] (0,0) -- (0,1);
+        \node[blue!80!black] at (0.3, 0.3) {$\mathcal{X}$};
+        
+        % Level curves of x1^2 + x2^2
+        \draw[dashed, red] (0,0) ++(45:0.4) arc (45:90:0.4);
+        \draw[dashed, red] (0,0) ++(0:0.4) arc (0:45:0.4);
+        \draw[dashed, red] (0,0) circle (0.4);
+        \draw[dashed, red] (0,0) circle (0.7);
+        \draw[dashed, red] (0,0) circle (1.0);
+        
+        % Point x_A
+        \filldraw[black] (0.5,0.5) circle (1pt) node[anchor=south west] {$x_A$};
+        
+        % Gradient of h1
+        \node[draw, fill=yellow!20, text width=3cm, align=center, rounded corners] at (1.1, 1.1) {At $x_A$, $\nabla h_1 = \mathbf{0}$ \\ $\implies \widetilde{\mathcal{F}}_{<} = \emptyset$};
+        
+        % Descent vector for objective
+        \draw[->, thick, red] (0.5,0.5) -- (0.2,0.2) node[pos=0.5, anchor=north west] {$-\nabla f$};
+    \end{tikzpicture}
+    \caption{Visualizing Example 1: The point $x_A$ satisfies the necessary optimality conditions because the active constraint's gradient vanishes. However, the objective can clearly decrease by moving towards the origin within $\mathcal{X}$, proving the condition is not sufficient.}
+    \label{fig:ex_cubic}
+\end{figure}
+
+\begin{example}[A Point Failing the Necessary Condition Appropriately]
+  Let us slightly modify the previous problem by replacing the cubic constraint with a linear one representing the \emph{exact same geometric feasible set}:
+  \begin{align*}
+    \min_{x \in \mathbb{R}^2} \quad & x_1^2 + x_2^2 \\
+    \text{subject to} \quad & h_1(x) = (x_1 + x_2 - 1) \leq 0, \\
+    & x_1 \geq 0, \quad x_2 \geq 0.
+  \end{align*}
+  Consider the same point $x_A = (a,b)$ with $a+b=1$. Now, the gradient of the active constraint is:
+  \[
+    \nabla h_1(x_A) = \begin{bmatrix} 1 \\ 1 \end{bmatrix}.
+  \]
+  The strictly linearized feasible cone is no longer empty:
+  \[
+    \widetilde{\mathcal{F}}_{<}(x_A) = \left\{ d \in \mathbb{R}^2 : d_1 + d_2 < 0 \right\} \neq \emptyset.
+  \]
+  We can compute the descent cone for the objective. The gradient of $f(x)=x_1^2+x_2^2$ is $\nabla f(x_A) = [2a, 2b]^\top$. So the descent cone is:
+  \[
+    \mathcal{D}(x_A) = \left\{ d \in \mathbb{R}^2 : 2a d_1 + 2b d_2 < 0 \right\}.
+  \]
+  It is trivial to find a direction $d$ that belongs to both sets (e.g., $d = [-a, -b]^\top$, which is moving straight towards the origin, yielding $-a-b = -1 < 0$ and $-2a^2-2b^2 < 0$). Thus,
+  \[
+    \widetilde{\mathcal{F}}_{<}(x_A) \cap \mathcal{D}(x_A) \neq \emptyset.
+  \]
+  This correctly flags that $x_A$ is \emph{not} a local minimum, showing how deeply the necessary condition relies on a non-degenerate algebraic representation (non-vanishing gradients) of the constraints.
+\end{example}
+
+\subsection{The Limitation Handling Equality Constraints}
+
+The necessary condition $\widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset$ is immensely powerful for inequality constraints $h_j(x) \leq 0$. However, it completely breaks down when applied naively to \textbf{equality constraints}. Let us examine why this happens.
+
+\begin{example}[Equality Constraints Lead to Trivial Linearized Cones]
+  Suppose we have an equality constraint $x_1 + x_2 - 1 = 0$. A standard technique to handle an equality constraint is to split it into two opposing inequality constraints:
+  \begin{align*}
+    h_1(x) &= (x_1 + x_2 - 1) \leq 0 \\
+    h_2(x) &= -(x_1 + x_2 - 1) \leq 0
+  \end{align*}
+  If a point $x_A$ is feasible (meaning it lies on the line $x_1 + x_2 - 1 = 0$), then both $h_1$ and $h_2$ are tightly active at $0$.
+  Computing the gradients yields:
+  \[
+    \nabla h_1(x_A) = \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \quad \nabla h_2(x_A) = \begin{bmatrix} -1 \\ -1 \end{bmatrix}.
+  \]
+  To find the strictly linearized feasible cone, a direction $d$ must simultaneously satisfy both strict inner product conditions:
+  \begin{align*}
+    \nabla h_1(x_A)^\top d < 0 &\implies d_1 + d_2 < 0 \\
+    \nabla h_2(x_A)^\top d < 0 &\implies -(d_1 + d_2) < 0 \implies d_1 + d_2 > 0
+  \end{align*}
+  It is mathematically impossible for $d_1 + d_2$ to be strictly less than $0$ and strictly greater than $0$ at the same time. Therefore,
+  \[
+    \widetilde{\mathcal{F}}_{<}(x_A) = \emptyset.
+  \]
+  Because the set is empty, $\widetilde{\mathcal{F}}_{<}(x_A) \cap \mathcal{D}(x_A) = \emptyset$ will hold trivially for \emph{any} point on the feasibility line, turning the condition into a tautology regardless of whether the point is a local minimum or not.
+\end{example}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[scale=1.5]
+        % The line x1 + x2 = 1
+        \draw[ultra thick, blue] (-2, 3) -- (3, -2) node[pos=0.9, above right] {$x_1+x_2=1$};
+        
+        % Point x_A
+        \filldraw[black] (0.5,0.5) circle (1.5pt) node[above left] {$x_A$};
+        
+        % Gradient vectors
+        \draw[->, thick, red] (0.5,0.5) -- (1.2,1.2) node[above right] {$\nabla h_1(x_A)$};
+        \draw[->, thick, orange] (0.5,0.5) -- (-0.2,-0.2) node[below left] {$\nabla h_2(x_A)$};
+        
+        % Half plane arrows
+        \draw[->, dashed, red] (2, -1) -- (1.5, -1.5);
+        \draw[->, dashed, orange] (-1, 2) -- (-0.5, 2.5);
+        
+        \node[align=right, red, anchor=east] at (1.4, -1.7) {Strict interior for $h_1$: $d_1+d_2 < 0$};
+        \node[align=left, orange, anchor=west] at (-0.4, 2.7) {Strict interior for $h_2$: $d_1+d_2 > 0$};
+    \end{tikzpicture}
+    \caption{Visualizing Example 3: An equality constraint modelled as two inequalities. The strict feasible directions for $h_1$ point into the open half-space below the line, and those for $h_2$ point strictly above it. The intersection of these two open half-spaces is empty, trivially leading to $\widetilde{\mathcal{F}}_{<} = \emptyset$.}
+    \label{fig:ex_equality}
+\end{figure}
+
+\begin{tcolorbox}[colframe=red!70!black, colback=red!5!white, title=Important Limitation]
+  The strict interior cone characterization $\widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset$ is \textbf{strictly applicable only for inequality constraints}. For systems containing equality constraints, we must rely on closed tangent cones or directly use the KKT gradient matrix stationarity conditions directly.
+\end{tcolorbox}
 
 % =====================================================================
 \section{Matrix Representation of the Local Minimum Characterization}
@@ -225,9 +443,80 @@ where $G \in \mathbb{R}^{|\mathcal{A}(x^*)| \times n}$ is the active constraint 
 \end{tcolorbox}
 
 % =====================================================================
-\section{Farkas' Lemma and Its Corollary}
+\section{Farkas' Lemma and Its Translation to Optimality}
 \label{sec:farkas}
 % =====================================================================
+
+The transition from the geometric condition $\widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset$ (derived in previous sections) to the algebraic KKT stationarity condition relies fundamentally on a theorem of alternatives known as Farkas' Lemma.
+
+\begin{theorem}[Farkas' Lemma]
+  Let $A \in \mathbb{R}^{m \times n}$ be a given matrix, and $c \in \mathbb{R}^n$ a given vector. Then exactly one of the following two systems has a solution:
+  \begin{enumerate}
+    \item System 1: $Ax \leq 0 \quad \text{and} \quad c^\top x < 0$ for some $x \in \mathbb{R}^n$.
+    \item System 2: $A^\top y = c \quad \text{and} \quad y \geq 0$ for some $y \in \mathbb{R}^m$.
+  \end{enumerate}
+\end{theorem}
+
+Geometrically, Farkas' lemma states that either the vector $c$ lies within the convex cone generated by the rows of $A$ (System 2), or there exists a hyperplane passing through the origin that strictly separates $c$ from that cone (System 1).
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[scale=1.5]
+        % Origin
+        \filldraw[black] (0,0) circle (1.5pt) node[below right] {$0$};
+        
+        % Rows of A (Generators of the cone)
+        \draw[->, ultra thick, blue] (0,0) -- (1, 1.5) node[above] {$a_1$};
+        \draw[->, ultra thick, blue] (0,0) -- (2, 0.5) node[right] {$a_2$};
+        
+        % The shaded cone
+        \fill[blue, opacity=0.1] (0,0) -- (2,3) -- (4,1) -- cycle;
+        \node[blue!80!black] at (1.5, 1) {Cone($A^\top$)};
+        
+        % Case 1: c is inside the cone
+        \draw[->, thick, green!60!black] (0,0) -- (1.5, 1.2) node[above right] {$c_2$ (Sys 2 holds)};
+        
+        % Case 2: c is outside the cone
+        \draw[->, thick, red] (0,0) -- (-1.5, 1) node[above left] {$c_1$ (Sys 1 holds)};
+        
+        % Separating hyperplane for c1
+        \draw[dashed, ultra thick, red] (-2, -1) -- (2, 1) node[pos=0.1, above left] {Separating hyperplane $x$};
+        
+        % Normal x (pointing downwards-right, orthogonal to the red line y = 1/2 x)
+        \draw[->, thick, gray] (0,0) -- (1, -2) node[pos=0.6, below left] {$x \in \mathbb{R}^n$ (Normal)};
+        
+        % Show inner angle
+        \draw[gray] (0.2, -0.4) arc (-63.4:146.3:0.45);
+        \node[gray] at (0,-0.6) {$>90^\circ$};
+    \end{tikzpicture}
+    \caption{Visualizing Farkas' Lemma. For a vector $c_2$ situated inside the cone spanned by the rows of $A$ (i.e. $a_1, a_2$), it can be represented as a non-negative linear combination $y_1 a_1 + y_2 a_2$ (System 2). Conversely, if $c_1$ is strictly outside the cone, we can find a strictly separating hyperplane. The normal vector to this hyperplane, $x$, acts as a direction making an obtuse angle with $c_1$ ($c_1^\top x < 0$) and obtuse/right angles with the cone generators ($a_i^\top x \leq 0 \implies Ax \leq 0$) (System 1).}
+    \label{fig:farkas}
+\end{figure}
+
+\begin{corollary}[Optimality via Farkas' Lemma]
+  \label{thm:farkas_opt}
+  Let us apply Farkas' Lemma to our derived necessary condition $\widetilde{\mathcal{F}}_{<}(x^*) \cap \mathcal{D}(x^*) = \emptyset$.
+  
+  Recall this geometric condition means there exists no direction $d \in \mathbb{R}^n$ such that:
+  \[
+    Gd \leq 0 \quad \text{and} \quad \nabla f(x^*)^\top d < 0
+  \]
+  where $G \in \mathbb{R}^{k \times n}$ is the matrix whose rows are the gradients of the active constraints $\nabla g_{i_j}(x^*)^\top$.
+  
+  Identifying our variables with Farkas' Lemma:
+  \begin{itemize}
+    \item $x \longleftrightarrow d$ (The search direction)
+    \item $A \longleftrightarrow G$ (The active constraint normal matrix)
+    \item $c \longleftrightarrow \nabla f(x^*)$ (The objective gradient)
+  \end{itemize}
+  Since we established that System 1 has \emph{NO mathematical solution} at a strict local minimum point $x^*$, it logically necessitates that System 2 \emph{MUST have a solution}.
+  
+  Therefore, there exists a vector of non-negative multipliers $\lambda_{\mathcal{A}} \geq 0$ (corresponding to the active constraints) such that:
+  \[
+    G^\top \lambda_{\mathcal{A}} = -\nabla f(x^*) \implies \nabla f(x^*) + G^\top \lambda_{\mathcal{A}} = \mathbf{0} \implies \nabla f(x^*) + \sum_{j=1}^{k} \lambda_{i_j} \nabla g_{i_j}(x^*) = \mathbf{0}.
+  \]
+  This perfectly bridges the gap, translating the conceptual lack of geometric descent directions into the clean algebraic KKT stationarity equations that we solve in practice.
+\end{corollary}
 
 \bigskip
 
